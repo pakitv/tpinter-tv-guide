@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+	<item android:id="@+id/refresh" android:title="Refresh" />
+	<item android:title="All channel" android:id="@+id/all_channel"/>
+</menu>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="app_name">Tv guide</string>
+	<string name="no_list_data">No List Data Present.</string>
+	<string-array name="all_channel_menu">
+		<item>Add to favorites</item>
+	</string-array>
+	<string-array name="favorites_menu">
+		<item>Remove from favorites</item>
+	</string-array>
+</resources>
