@@ -152,7 +152,7 @@ public class Programme implements KvmSerializable {
 	}
 
 	public String toString() {
-		return startDateTime + " " + title;
+		return startDateTime.toLocaleString() + " " + title;
 	}
 
 	public Date getStartDateTime() {
