@@ -9,21 +9,18 @@ import org.ksoap2.serialization.KvmSerializable;
 import org.ksoap2.serialization.PropertyInfo;
 import org.ksoap2.serialization.SoapObject;
 
+import com.tpinter.android.tvguide.utility.Constants;
+
 public class Programme implements KvmSerializable {
 	public static Class<Programme> PROGRAMME_CLASS = Programme.class;
-
-	public final static String DATA_FORMAT = "yyyy-MM-dd'T'hh:mm:ss";
 
 	private Date startDateTime;
 	private String title;
 	private String subTitle;
 	private String category;
 	private String url;
-	private SimpleDateFormat format = new SimpleDateFormat(DATA_FORMAT);
-
-	public Programme() {
-
-	}
+	private SimpleDateFormat format = new SimpleDateFormat(
+			Constants.SERVICE_DATA_FORMAT);
 
 	public Programme(SoapObject obj) {
 		this.title = getValue(obj.toString(), "Title");
@@ -151,8 +148,10 @@ public class Programme implements KvmSerializable {
 		return result;
 	}
 
+	@Override
 	public String toString() {
-		return startDateTime.toLocaleString() + " " + title;
+		return new SimpleDateFormat(Constants.HOUR_MINUTE_DATA_FORMAT)
+				.format(startDateTime) + " " + title;
 	}
 
 	public Date getStartDateTime() {

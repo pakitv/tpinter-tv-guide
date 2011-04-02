@@ -18,6 +18,7 @@ import android.widget.Toast;
 
 import com.tpinter.android.tvguide.dbmanager.DBAdapter;
 import com.tpinter.android.tvguide.entity.Channel;
+import com.tpinter.android.tvguide.utility.Constants;
 import com.tpinter.android.tvguide.webservice.TvAnimareWebService;
 
 public class AllChannelActivity extends ListActivity {
@@ -79,7 +80,10 @@ public class AllChannelActivity extends ListActivity {
 		Channel selectedChannel = (Channel) this.getListAdapter().getItem(
 				position);
 		Intent intent = new Intent(this, ProgrammeActivity.class);
-		intent.putExtra("ChannelId", selectedChannel.getChannelID());
+		intent.putExtra(Constants.INTENT_CHANNEL_ID,
+				selectedChannel.getChannelID());
+		intent.putExtra(Constants.INTENT_CHANNEL_TITLE,
+				selectedChannel.getTitle());
 		startActivityForResult(intent, 0);
 	}
 

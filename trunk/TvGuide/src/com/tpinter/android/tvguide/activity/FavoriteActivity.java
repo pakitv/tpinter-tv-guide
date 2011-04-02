@@ -3,7 +3,6 @@ package com.tpinter.android.tvguide.activity;
 import java.util.List;
 import java.util.Vector;
 
-import android.app.Activity;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -30,15 +29,15 @@ import android.widget.Toast;
 import com.tpinter.android.tvguide.dbmanager.DBAdapter;
 import com.tpinter.android.tvguide.entity.Channel;
 import com.tpinter.android.tvguide.entity.Programme;
+import com.tpinter.android.tvguide.utility.Constants;
 import com.tpinter.android.tvguide.webservice.TvAnimareWebService;
 
 public class FavoriteActivity extends ListActivity {
 
 	public final static int REMOVE_FROM_FAVORITES_CONTEXTMENU = 0;
 
-	private DBAdapter db;
-	private LayoutInflater inflater;
-	private RowData rd;
+	protected DBAdapter db;
+	protected LayoutInflater inflater;
 
 	// private Integer[] imgid = { R.drawable.icon };
 
@@ -48,12 +47,12 @@ public class FavoriteActivity extends ListActivity {
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.favorite_main);
 
-		inflater = (LayoutInflater) getSystemService(Activity.LAYOUT_INFLATER_SERVICE);
+		inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
 		db = new DBAdapter(this);
 
 		loadData();
-		// getListView().setTextFilterEnabled(true);
+		getListView().setTextFilterEnabled(true);
 	}
 
 	@Override
@@ -68,10 +67,13 @@ public class FavoriteActivity extends ListActivity {
 			long id) {
 		super.onListItemClick(listView, view, position, id);
 
-		Channel selectedChannel = (Channel) this.getListAdapter().getItem(
+		RowData selectedRowData = (RowData) this.getListAdapter().getItem(
 				position);
 		Intent intent = new Intent(this, ProgrammeActivity.class);
-		intent.putExtra("ChannelId", selectedChannel.getChannelID());
+		intent.putExtra(Constants.INTENT_CHANNEL_ID,
+				selectedRowData.getChannelID());
+		intent.putExtra(Constants.INTENT_CHANNEL_TITLE,
+				selectedRowData.getTitle());
 		startActivityForResult(intent, 0);
 	}
 
@@ -146,14 +148,17 @@ public class FavoriteActivity extends ListActivity {
 			this.progressDialog = progressDialog;
 		}
 
+		@Override
 		public void onPreExecute() {
 			this.progressDialog.show();
 		}
 
+		@Override
 		protected CustomAdapter doInBackground(Void... params) {
 			return setupListAdapter();
 		}
 
+		@Override
 		public void onPostExecute(CustomAdapter result) {
 			this.progressDialog.dismiss();
 			FavoriteActivity.this.setListAdapter(result);
@@ -168,13 +173,14 @@ public class FavoriteActivity extends ListActivity {
 		 * well as the data.
 		 */
 		private CustomAdapter setupListAdapter() {
-			TvAnimareWebService tvAnimareServiceCall = new TvAnimareWebService();
-			DBAdapter db = new DBAdapter(FavoriteActivity.this);
-			db.open();
-
 			Vector<RowData> data = new Vector<RowData>();
 
+			TvAnimareWebService tvAnimareServiceCall = new TvAnimareWebService();
+
+			DBAdapter db = new DBAdapter(FavoriteActivity.this);
+			db.open();
 			Cursor cursor = db.getAllFavorites();
+
 			if (cursor.moveToFirst()) {
 				do {
 					Channel channel = new Channel();
@@ -196,33 +202,44 @@ public class FavoriteActivity extends ListActivity {
 					double percent = (nowTime - currentTime)
 							/ (nextTime - currentTime);
 
-					rd = new RowData(channel, programmelList[0],
+					RowData rd = new RowData(channel, programmelList[0],
 							(int) Math.round(percent * 100));
 					data.add(rd);
 				} while (cursor.moveToNext());
 			}
 			db.close();
 
-			return new CustomAdapter(FavoriteActivity.this, android.R.id.list,
-					R.id.title, data);
+			return new CustomAdapter(FavoriteActivity.this,
+					R.layout.favorite_list, R.id.title, data);
 		}
 	}
 
 	private class RowData {
 
+		protected int channelID;
 		protected String title;
 		protected String programmeTitle;
 		protected int progressBarStatus;
 
 		public RowData(Channel channel, Programme programme,
 				int progressBarStatus) {
+			this.channelID = channel.getChannelID();
 			this.title = channel.getTitle();
 			this.programmeTitle = programme.getTitle();
 			this.progressBarStatus = progressBarStatus;
 		}
 
+		@Override
 		public String toString() {
 			return title + " " + programmeTitle;
+		}
+
+		public int getChannelID() {
+			return channelID;
+		}
+
+		public String getTitle() {
+			return title;
 		}
 	}
 
@@ -238,74 +255,57 @@ public class FavoriteActivity extends ListActivity {
 		public View getView(int position, View convertView, ViewGroup parent) {
 			ViewHolder holder = null;
 
-			TextView title = null;
-			TextView detail = null;
-			ProgressBar progressBar = null;
-			// ImageView i11 = null;
-
 			RowData rowData = getItem(position);
 
-			if (null == convertView) {
-				convertView = inflater.inflate(android.R.id.list, null);
+			if (convertView == null) {
+				convertView = inflater.inflate(R.layout.favorite_list, parent,
+						false);
 				holder = new ViewHolder(convertView);
+
 				convertView.setTag(holder);
 			}
 			holder = (ViewHolder) convertView.getTag();
 
-			title = holder.getTitle();
-			title.setText(rowData.title);
+			holder.getTitle().setText(rowData.title);
+			holder.getDetail().setText(rowData.programmeTitle);
+			holder.getProgressBar().setProgress(rowData.progressBarStatus);
 
-			detail = holder.getDetail();
-			detail.setText(rowData.programmeTitle);
-
-			progressBar = holder.getProgressBar();
-			progressBar.setProgress(rowData.progressBarStatus);
-
-			// i11 = holder.getImage();
-			// i11.setImageResource(imgid[0]);
+			// holder.getImage().setImageResource(imgid[0]);
 
 			return convertView;
 		}
 
 		private class ViewHolder {
-			private View row;
+			private View view;
 			private TextView title = null;
 			private TextView detail = null;
 			private ProgressBar progressBar = null;
 
-			// private ImageView i11 = null;
+			// private ImageView image = null;
 
 			public ViewHolder(View row) {
-				this.row = row;
+				this.view = row;
+				this.title = (TextView) view.findViewById(R.id.title);
+				this.detail = (TextView) view.findViewById(R.id.detail);
+				this.progressBar = (ProgressBar) view
+						.findViewById(R.id.progressbar);
+				// image = (ImageView) row.findViewById(R.id.img);
 			}
 
 			public TextView getTitle() {
-				if (null == title) {
-					title = (TextView) row.findViewById(R.id.title);
-				}
 				return title;
 			}
 
 			public TextView getDetail() {
-				if (null == detail) {
-					detail = (TextView) row.findViewById(R.id.detail);
-				}
 				return detail;
 			}
 
 			public ProgressBar getProgressBar() {
-				if (null == progressBar) {
-					progressBar = (ProgressBar) row
-							.findViewById(R.id.progressbar);
-				}
 				return progressBar;
 			}
 
 			// public ImageView getImage() {
-			// if (null == i11) {
-			// i11 = (ImageView) row.findViewById(R.id.img);
-			// }
-			// return i11;
+			// return image;
 			// }
 		}
 	}
