@@ -19,7 +19,9 @@ android:padding="5px"
 <TextView
 android:id="@+id/programme_date"
 android:layout_width="60dp"
-android:layout_height="50dp"/>
+android:layout_height="50dp"
+android:gravity="center"
+android:textSize="18sp"/>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
 android:orientation="vertical"
 android:layout_width="fill_parent"

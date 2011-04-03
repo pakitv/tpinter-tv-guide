@@ -15,12 +15,16 @@ public class Programme implements KvmSerializable {
 	public static Class<Programme> PROGRAMME_CLASS = Programme.class;
 
 	private Date startDateTime;
+
 	private String title;
+
 	private String subTitle;
+
 	private String category;
+
 	private String url;
-	private SimpleDateFormat format = new SimpleDateFormat(
-			Constants.SERVICE_DATA_FORMAT);
+
+	private final SimpleDateFormat format = new SimpleDateFormat(Constants.SERVICE_DATA_FORMAT);
 
 	public Programme(SoapObject obj) {
 		this.title = getValue(obj.toString(), "Title");
@@ -34,8 +38,7 @@ public class Programme implements KvmSerializable {
 		// this.startDateTime = parts[0] + ":" + parts[1];
 
 		try {
-			this.startDateTime = format.parse(getValue(obj.toString(),
-					"StartDateTime").substring(0, 19));
+			this.startDateTime = format.parse(getValue(obj.toString(), "StartDateTime").substring(0, 19));
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
@@ -72,8 +75,7 @@ public class Programme implements KvmSerializable {
 		return 5;
 	}
 
-	public void getPropertyInfo(int index, Hashtable hastable,
-			PropertyInfo propertyInfo) {
+	public void getPropertyInfo(int index, Hashtable hastable, PropertyInfo propertyInfo) {
 		switch (index) {
 		case 0: {
 			propertyInfo.name = "StartDateTime";
@@ -107,8 +109,7 @@ public class Programme implements KvmSerializable {
 		switch (index) {
 		case 0: {
 			try {
-				this.startDateTime = format.parse(getValue(obj.toString(),
-						"StartDateTime").substring(0, 19));
+				this.startDateTime = format.parse(getValue(obj.toString(), "StartDateTime").substring(0, 19));
 			} catch (ParseException e) {
 				e.printStackTrace();
 			}
@@ -138,20 +139,20 @@ public class Programme implements KvmSerializable {
 	}
 
 	private String getValue(String text, String propertyName) {
-		int startPosition = text.indexOf(propertyName) + propertyName.length()
-				+ 1;
-		int endPosition = text.indexOf(";", text.indexOf(propertyName));
+		text = text.substring(8);
+		String[] properties = text.split(";");
+		for (String property : properties) {
+			String[] keyValue = property.trim().split("=");
+			if (keyValue[0].equals(propertyName))
+				return keyValue[1];
+		}
 
-		String result = startPosition == 0 ? "" : text.substring(startPosition,
-				endPosition);
-
-		return result;
+		return "";
 	}
 
 	@Override
 	public String toString() {
-		return new SimpleDateFormat(Constants.HOUR_MINUTE_DATA_FORMAT)
-				.format(startDateTime) + " " + title;
+		return new SimpleDateFormat(Constants.HOUR_MINUTE_DATA_FORMAT).format(startDateTime) + " " + title;
 	}
 
 	public Date getStartDateTime() {

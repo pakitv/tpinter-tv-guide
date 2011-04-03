@@ -10,27 +10,27 @@ public class Channel implements KvmSerializable {
 	public static Class<Channel> CHANNEL_CLASS = Channel.class;
 
 	private String channelGroupTitle;
+
 	private int channelID;
+
 	private int channelGroupID;
+
 	private String title;
+
 	private String url;
+
 	private String urlWebSite;
 
 	public Channel() {
 	}
 
 	public Channel(SoapObject obj) {
-		this.channelGroupTitle = obj.getProperty("ChannelGroupTitle")
-				.toString();
-		this.channelID = Integer.parseInt(obj.getProperty("ChannelID")
-				.toString());
-		this.channelGroupID = Integer.parseInt(obj
-				.getProperty("ChannelGroupID").toString());
-		this.title = obj.getProperty("Title").toString();
-		this.url = obj.getProperty("Url").toString();
-
-		if (obj.getPropertyCount() == 6)
-			this.urlWebSite = obj.getProperty("UrlWebSite").toString();
+		this.channelGroupTitle = getValue(obj.toString(), "ChannelGroupTitle");
+		this.channelID = Integer.parseInt(getValue(obj.toString(), "ChannelID"));
+		this.channelGroupID = Integer.parseInt(getValue(obj.toString(), "ChannelGroupID"));
+		this.title = getValue(obj.toString(), "Title");
+		this.url = getValue(obj.toString(), "Url");
+		this.urlWebSite = getValue(obj.toString(), "UrlWebSite");
 	}
 
 	public Object getProperty(int index) {
@@ -68,8 +68,7 @@ public class Channel implements KvmSerializable {
 		return 6;
 	}
 
-	public void getPropertyInfo(int index, Hashtable hastable,
-			PropertyInfo propertyInfo) {
+	public void getPropertyInfo(int index, Hashtable hastable, PropertyInfo propertyInfo) {
 		switch (index) {
 		case 0: {
 			propertyInfo.name = "ChannelGroupTitle";
@@ -133,6 +132,19 @@ public class Channel implements KvmSerializable {
 		}
 	}
 
+	private String getValue(String text, String propertyName) {
+		text = text.substring(8);
+		String[] properties = text.split(";");
+		for (String property : properties) {
+			String[] keyValue = property.trim().split("=");
+			if (keyValue[0].equals(propertyName))
+				return keyValue[1];
+		}
+
+		return "";
+	}
+
+	@Override
 	public String toString() {
 		return title;
 	}

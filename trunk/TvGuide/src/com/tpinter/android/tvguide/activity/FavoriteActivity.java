@@ -37,6 +37,7 @@ public class FavoriteActivity extends ListActivity {
 	public final static int REMOVE_FROM_FAVORITES_CONTEXTMENU = 0;
 
 	protected DBAdapter db;
+
 	protected LayoutInflater inflater;
 
 	// private Integer[] imgid = { R.drawable.icon };
@@ -50,6 +51,12 @@ public class FavoriteActivity extends ListActivity {
 		inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
 		db = new DBAdapter(this);
+		db.open();
+		Cursor cursor = db.getAllFavorites();
+		if (cursor.getCount() < 1) {
+			Toast.makeText(this, "Favorite list is empty.", Toast.LENGTH_LONG).show();
+			startActivityForResult(new Intent(this, AllChannelActivity.class), 0);
+		}
 
 		loadData();
 		getListView().setTextFilterEnabled(true);
@@ -63,30 +70,23 @@ public class FavoriteActivity extends ListActivity {
 	}
 
 	@Override
-	protected void onListItemClick(ListView listView, View view, int position,
-			long id) {
+	protected void onListItemClick(ListView listView, View view, int position, long id) {
 		super.onListItemClick(listView, view, position, id);
 
-		RowData selectedRowData = (RowData) this.getListAdapter().getItem(
-				position);
+		RowData selectedRowData = (RowData) this.getListAdapter().getItem(position);
 		Intent intent = new Intent(this, ProgrammeActivity.class);
-		intent.putExtra(Constants.INTENT_CHANNEL_ID,
-				selectedRowData.getChannelID());
-		intent.putExtra(Constants.INTENT_CHANNEL_TITLE,
-				selectedRowData.getTitle());
+		intent.putExtra(Constants.INTENT_CHANNEL_ID, selectedRowData.getChannelID());
+		intent.putExtra(Constants.INTENT_CHANNEL_TITLE, selectedRowData.getTitle());
 		startActivityForResult(intent, 0);
 	}
 
 	@Override
-	public void onCreateContextMenu(ContextMenu menu, View view,
-			ContextMenuInfo menuInfo) {
+	public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo) {
 		if (view.getId() == android.R.id.list) {
 			AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
-			Channel selectedChannel = (Channel) this.getListAdapter().getItem(
-					info.position);
+			Channel selectedChannel = (Channel) this.getListAdapter().getItem(info.position);
 			menu.setHeaderTitle(selectedChannel.getTitle());
-			String[] menuItems = getResources().getStringArray(
-					R.array.favorites_menu);
+			String[] menuItems = getResources().getStringArray(R.array.favorites_menu);
 			for (int i = 0; i < menuItems.length; i++) {
 				menu.add(Menu.NONE, i, i, menuItems[i]);
 			}
@@ -100,8 +100,7 @@ public class FavoriteActivity extends ListActivity {
 			loadData();
 			break;
 		case R.id.all_channel:
-			startActivityForResult(new Intent(this, AllChannelActivity.class),
-					0);
+			startActivityForResult(new Intent(this, AllChannelActivity.class), 0);
 			break;
 		}
 		return true;
@@ -109,22 +108,18 @@ public class FavoriteActivity extends ListActivity {
 
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
-		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item
-				.getMenuInfo();
+		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
 
 		switch (item.getItemId()) {
 		case REMOVE_FROM_FAVORITES_CONTEXTMENU:
 			db.open();
-			Channel selectedChannel = (Channel) this.getListAdapter().getItem(
-					info.position);
+			Channel selectedChannel = (Channel) this.getListAdapter().getItem(info.position);
 
 			if (db.deleteFavorite(selectedChannel.getChannelID())) {
-				Toast.makeText(this, "Remove successful!", Toast.LENGTH_SHORT)
-						.show();
+				Toast.makeText(this, "Remove successful!", Toast.LENGTH_SHORT).show();
 				loadData();
 			} else {
-				Toast.makeText(this, "Remove failed!", Toast.LENGTH_LONG)
-						.show();
+				Toast.makeText(this, "Remove failed!", Toast.LENGTH_LONG).show();
 			}
 			db.close();
 
@@ -139,8 +134,7 @@ public class FavoriteActivity extends ListActivity {
 		new LoadFavoritesTask(loadingDialog).execute();
 	}
 
-	private class LoadFavoritesTask extends
-			AsyncTask<Void, Void, CustomAdapter> {
+	private class LoadFavoritesTask extends AsyncTask<Void, Void, CustomAdapter> {
 
 		ProgressDialog progressDialog;
 
@@ -163,8 +157,7 @@ public class FavoriteActivity extends ListActivity {
 			this.progressDialog.dismiss();
 			FavoriteActivity.this.setListAdapter(result);
 
-			ListView list = (ListView) FavoriteActivity.this
-					.findViewById(android.R.id.list);
+			ListView list = (ListView) FavoriteActivity.this.findViewById(android.R.id.list);
 			FavoriteActivity.this.registerForContextMenu(list);
 		}
 
@@ -186,43 +179,38 @@ public class FavoriteActivity extends ListActivity {
 					Channel channel = new Channel();
 					channel.setChannelID(Integer.parseInt(cursor.getString(0)));
 					channel.setTitle(cursor.getString(1));
-					channel.setChannelGroupID(Integer.parseInt(cursor
-							.getString(2)));
+					channel.setChannelGroupID(Integer.parseInt(cursor.getString(2)));
 					channel.setChannelGroupTitle(cursor.getString(3));
 
-					Programme[] programmelList = tvAnimareServiceCall
-							.GetCurrentProgramme(channel.getChannelID());
+					Programme[] programmelList = tvAnimareServiceCall.GetCurrentProgramme(channel.getChannelID());
 
-					double currentTime = programmelList[0].getStartDateTime()
-							.getTime();
-					double nextTime = programmelList[1].getStartDateTime()
-							.getTime();
+					double currentTime = programmelList[0].getStartDateTime().getTime();
+					double nextTime = programmelList[1].getStartDateTime().getTime();
 					double nowTime = java.lang.System.currentTimeMillis();
 
-					double percent = (nowTime - currentTime)
-							/ (nextTime - currentTime);
+					double percent = (nowTime - currentTime) / (nextTime - currentTime);
 
-					RowData rd = new RowData(channel, programmelList[0],
-							(int) Math.round(percent * 100));
+					RowData rd = new RowData(channel, programmelList[0], (int) Math.round(percent * 100));
 					data.add(rd);
 				} while (cursor.moveToNext());
 			}
 			db.close();
 
-			return new CustomAdapter(FavoriteActivity.this,
-					R.layout.favorite_list, R.id.title, data);
+			return new CustomAdapter(FavoriteActivity.this, R.layout.favorite_list, R.id.title, data);
 		}
 	}
 
 	private class RowData {
 
 		protected int channelID;
+
 		protected String title;
+
 		protected String programmeTitle;
+
 		protected int progressBarStatus;
 
-		public RowData(Channel channel, Programme programme,
-				int progressBarStatus) {
+		public RowData(Channel channel, Programme programme, int progressBarStatus) {
 			this.channelID = channel.getChannelID();
 			this.title = channel.getTitle();
 			this.programmeTitle = programme.getTitle();
@@ -245,8 +233,7 @@ public class FavoriteActivity extends ListActivity {
 
 	private class CustomAdapter extends ArrayAdapter<RowData> {
 
-		public CustomAdapter(Context context, int resource,
-				int textViewResourceId, List<RowData> objects) {
+		public CustomAdapter(Context context, int resource, int textViewResourceId, List<RowData> objects) {
 			super(context, resource, textViewResourceId, objects);
 
 		}
@@ -258,8 +245,7 @@ public class FavoriteActivity extends ListActivity {
 			RowData rowData = getItem(position);
 
 			if (convertView == null) {
-				convertView = inflater.inflate(R.layout.favorite_list, parent,
-						false);
+				convertView = inflater.inflate(R.layout.favorite_list, parent, false);
 				holder = new ViewHolder(convertView);
 
 				convertView.setTag(holder);
@@ -276,9 +262,12 @@ public class FavoriteActivity extends ListActivity {
 		}
 
 		private class ViewHolder {
-			private View view;
+			private final View view;
+
 			private TextView title = null;
+
 			private TextView detail = null;
+
 			private ProgressBar progressBar = null;
 
 			// private ImageView image = null;
@@ -287,8 +276,7 @@ public class FavoriteActivity extends ListActivity {
 				this.view = row;
 				this.title = (TextView) view.findViewById(R.id.title);
 				this.detail = (TextView) view.findViewById(R.id.detail);
-				this.progressBar = (ProgressBar) view
-						.findViewById(R.id.progressbar);
+				this.progressBar = (ProgressBar) view.findViewById(R.id.progressbar);
 				// image = (ImageView) row.findViewById(R.id.img);
 			}
 

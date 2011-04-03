@@ -1,5 +1,8 @@
 package com.tpinter.android.tvguide.activity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -16,6 +19,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.tpinter.android.tvguide.adapter.AllChannelListAdapter;
 import com.tpinter.android.tvguide.dbmanager.DBAdapter;
 import com.tpinter.android.tvguide.entity.Channel;
 import com.tpinter.android.tvguide.utility.Constants;
@@ -44,15 +48,12 @@ public class AllChannelActivity extends ListActivity {
 	}
 
 	@Override
-	public void onCreateContextMenu(ContextMenu menu, View view,
-			ContextMenuInfo menuInfo) {
+	public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo) {
 		if (view.getId() == android.R.id.list) {
 			AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
-			Channel selectedChannel = (Channel) this.getListAdapter().getItem(
-					info.position);
+			Channel selectedChannel = (Channel) this.getListAdapter().getItem(info.position);
 			menu.setHeaderTitle(selectedChannel.getTitle());
-			String[] menuItems = getResources().getStringArray(
-					R.array.all_channel_menu);
+			String[] menuItems = getResources().getStringArray(R.array.all_channel_menu);
 			for (int i = 0; i < menuItems.length; i++) {
 				menu.add(Menu.NONE, i, i, menuItems[i]);
 			}
@@ -73,41 +74,30 @@ public class AllChannelActivity extends ListActivity {
 	}
 
 	@Override
-	protected void onListItemClick(ListView listView, View view, int position,
-			long id) {
+	protected void onListItemClick(ListView listView, View view, int position, long id) {
 		super.onListItemClick(listView, view, position, id);
 
-		Channel selectedChannel = (Channel) this.getListAdapter().getItem(
-				position);
+		Channel selectedChannel = (Channel) this.getListAdapter().getItem(position);
 		Intent intent = new Intent(this, ProgrammeActivity.class);
-		intent.putExtra(Constants.INTENT_CHANNEL_ID,
-				selectedChannel.getChannelID());
-		intent.putExtra(Constants.INTENT_CHANNEL_TITLE,
-				selectedChannel.getTitle());
+		intent.putExtra(Constants.INTENT_CHANNEL_ID, selectedChannel.getChannelID());
+		intent.putExtra(Constants.INTENT_CHANNEL_TITLE, selectedChannel.getTitle());
 		startActivityForResult(intent, 0);
 	}
 
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
-		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item
-				.getMenuInfo();
+		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
 
 		switch (item.getItemId()) {
 		case ADD_TO_FAVORITES_CONTEXTMENU:
 			db.open();
-			Channel selectedChannel = (Channel) this.getListAdapter().getItem(
-					info.position);
+			Channel selectedChannel = (Channel) this.getListAdapter().getItem(info.position);
 
-			if (db.insertFavorite(selectedChannel.getChannelID(),
-					selectedChannel.getTitle(),
-					selectedChannel.getChannelGroupID(),
+			if (db.insertFavorite(selectedChannel.getChannelID(), selectedChannel.getTitle(), selectedChannel.getChannelGroupID(),
 					selectedChannel.getChannelGroupTitle()) > -1) {
-				Toast.makeText(this,
-						selectedChannel.getTitle() + " added to favorites.",
-						Toast.LENGTH_LONG).show();
+				Toast.makeText(this, selectedChannel.getTitle() + " added to favorites.", Toast.LENGTH_LONG).show();
 			} else {
-				Toast.makeText(this, "Operation failed!", Toast.LENGTH_LONG)
-						.show();
+				Toast.makeText(this, "Failed to add " + selectedChannel.getTitle() + " to favorites!", Toast.LENGTH_LONG).show();
 			}
 			db.close();
 
@@ -122,8 +112,7 @@ public class AllChannelActivity extends ListActivity {
 		new LoadAllChannelTask(loadingDialog).execute();
 	}
 
-	private class LoadAllChannelTask extends
-			AsyncTask<Void, Void, ArrayAdapter<Channel>> {
+	private class LoadAllChannelTask extends AsyncTask<Void, Void, AllChannelListAdapter> {
 
 		ProgressDialog progressDialog;
 
@@ -131,20 +120,22 @@ public class AllChannelActivity extends ListActivity {
 			this.progressDialog = progressDialog;
 		}
 
+		@Override
 		public void onPreExecute() {
 			this.progressDialog.show();
 		}
 
-		protected ArrayAdapter<Channel> doInBackground(Void... params) {
+		@Override
+		protected AllChannelListAdapter doInBackground(Void... params) {
 			return setupListAdapter();
 		}
 
-		public void onPostExecute(ArrayAdapter<Channel> result) {
+		@Override
+		public void onPostExecute(AllChannelListAdapter result) {
 			this.progressDialog.dismiss();
 			AllChannelActivity.this.setListAdapter(result);
 
-			ListView list = (ListView) AllChannelActivity.this
-					.findViewById(android.R.id.list);
+			ListView list = (ListView) AllChannelActivity.this.findViewById(android.R.id.list);
 			AllChannelActivity.this.registerForContextMenu(list);
 		}
 
@@ -152,12 +143,26 @@ public class AllChannelActivity extends ListActivity {
 		 * This is where we create and connect the adapter to this activity as
 		 * well as the data.
 		 */
-		private ArrayAdapter<Channel> setupListAdapter() {
+		private AllChannelListAdapter setupListAdapter() {
 			TvAnimareWebService tvAnimareServiceCall = new TvAnimareWebService();
 			Channel[] channelList = tvAnimareServiceCall.GetChannelList();
+			AllChannelListAdapter adapter = new AllChannelListAdapter(AllChannelActivity.this);
 
-			return new ArrayAdapter<Channel>(AllChannelActivity.this,
-					android.R.layout.simple_list_item_1, channelList);
+			String groupTitle = channelList[0].getChannelGroupTitle();
+			List<Channel> group = new ArrayList<Channel>();
+			for (Channel channel : channelList) {
+				if (!channel.getChannelGroupTitle().equals(groupTitle)) {
+					adapter.addSection(groupTitle, new ArrayAdapter<Channel>(AllChannelActivity.this, R.layout.all_channel_list_item, group));
+					group = new ArrayList<Channel>();
+				}
+				group.add(channel);
+				groupTitle = channel.getChannelGroupTitle();
+			}
+
+			return adapter;
+
+			// return new ArrayAdapter<Channel>(AllChannelActivity.this,
+			// android.R.layout.simple_list_item_1, channelList);
 
 		}
 	}
