@@ -114,5 +114,4 @@ public class AllChannelListAdapter extends BaseAdapter {
 	public long getItemId(int position) {
 		return position;
 	}
-
 }
