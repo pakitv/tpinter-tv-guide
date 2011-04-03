@@ -26,7 +26,9 @@ import com.tpinter.android.tvguide.webservice.TvAnimareWebService;
 public class ProgrammeActivity extends ListActivity {
 
 	protected Integer channelId;
+
 	protected String channelTitle;
+
 	protected LayoutInflater inflater;
 
 	@SuppressWarnings("boxing")
@@ -36,14 +38,19 @@ public class ProgrammeActivity extends ListActivity {
 		setContentView(R.layout.programme_main);
 
 		channelId = getIntent().getIntExtra(Constants.INTENT_CHANNEL_ID, -1);
-		channelTitle = getIntent().getStringExtra(
-				Constants.INTENT_CHANNEL_TITLE);
+		channelTitle = getIntent().getStringExtra(Constants.INTENT_CHANNEL_TITLE);
 
 		inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
 		loadData();
-		TextView channelTitleTextView = (TextView) findViewById(R.id.channel_title);
-		channelTitleTextView.setText(channelTitle);
+		// View programmeHeader =
+		// getLayoutInflater().inflate(R.layout.programme_header, null, false);
+		//
+		// ListView list = (ListView) findViewById(R.id.list);
+		// list.addHeaderView(programmeHeader);
+		// TextView channelTitleTextView = (TextView)
+		// findViewById(R.id.channel_title);
+		// channelTitleTextView.setText(channelTitle);
 	}
 
 	@Override
@@ -60,8 +67,7 @@ public class ProgrammeActivity extends ListActivity {
 			loadData();
 			break;
 		case R.id.all_channel:
-			startActivityForResult(new Intent(this, AllChannelActivity.class),
-					0);
+			startActivityForResult(new Intent(this, AllChannelActivity.class), 0);
 			break;
 		case R.id.favorite:
 			startActivityForResult(new Intent(this, FavoriteActivity.class), 0);
@@ -79,10 +85,10 @@ public class ProgrammeActivity extends ListActivity {
 		}
 	}
 
-	private class LoadProgrammeTask extends
-			AsyncTask<Void, Void, CustomAdapter> {
+	private class LoadProgrammeTask extends AsyncTask<Void, Void, CustomAdapter> {
 
 		ProgressDialog progressDialog;
+
 		int id;
 
 		public LoadProgrammeTask(ProgressDialog progressDialog, int id) {
@@ -114,8 +120,7 @@ public class ProgrammeActivity extends ListActivity {
 			Vector<RowData> data = new Vector<RowData>();
 
 			TvAnimareWebService tvAnimareServiceCall = new TvAnimareWebService();
-			Programme[] programmelList = tvAnimareServiceCall
-					.GetCurrentProgramme(this.id);
+			Programme[] programmelList = tvAnimareServiceCall.GetCurrentProgramme(this.id);
 
 			for (Programme programme : programmelList) {
 				data.add(new RowData(this.id, programme));
@@ -123,25 +128,25 @@ public class ProgrammeActivity extends ListActivity {
 			// return new ArrayAdapter<Programme>(ProgrammeActivity.this,
 			// android.R.layout.simple_list_item_1, programmelList);
 
-			return new CustomAdapter(ProgrammeActivity.this,
-					R.layout.programme_list, R.id.programme_title, data);
+			return new CustomAdapter(ProgrammeActivity.this, R.layout.programme_list, R.id.programme_title, data);
 		}
 	}
 
 	private class RowData {
 
 		protected int channelID;
+
 		protected String programmeDetail;
+
 		protected String programmeTitle;
+
 		protected String programmeDate;
 
 		public RowData(int channelId, Programme programme) {
 			this.channelID = channelId;
 			this.programmeTitle = programme.getTitle();
-			this.programmeDetail = programme.getSubTitle();
-			this.programmeDate = new SimpleDateFormat(
-					Constants.HOUR_MINUTE_DATA_FORMAT).format(programme
-					.getStartDateTime());
+			this.programmeDetail = programme.getSubTitle() == "" ? programme.getCategory() : programme.getSubTitle();
+			this.programmeDate = new SimpleDateFormat(Constants.HOUR_MINUTE_DATA_FORMAT).format(programme.getStartDateTime());
 		}
 
 		@Override
@@ -152,8 +157,7 @@ public class ProgrammeActivity extends ListActivity {
 
 	private class CustomAdapter extends ArrayAdapter<RowData> {
 
-		public CustomAdapter(Context context, int resource,
-				int textViewResourceId, List<RowData> objects) {
+		public CustomAdapter(Context context, int resource, int textViewResourceId, List<RowData> objects) {
 			super(context, resource, textViewResourceId, objects);
 
 		}
@@ -165,32 +169,33 @@ public class ProgrammeActivity extends ListActivity {
 			RowData rowData = getItem(position);
 
 			if (convertView == null) {
-				convertView = inflater.inflate(R.layout.programme_list, parent,
-						false);
+				convertView = inflater.inflate(R.layout.programme_list, parent, false);
 				holder = new ViewHolder(convertView);
 
 				convertView.setTag(holder);
 			}
 			holder = (ViewHolder) convertView.getTag();
 
-			holder.getTitle().setText(rowData.programmeDetail);
-			holder.getDetail().setText(rowData.programmeTitle);
+			holder.getTitle().setText(rowData.programmeTitle);
+			holder.getDetail().setText(rowData.programmeDetail);
 			holder.getDate().setText(rowData.programmeDate);
 
 			return convertView;
 		}
 
 		private class ViewHolder {
-			private View view;
+			private final View view;
+
 			private TextView title = null;
+
 			private TextView detail = null;
+
 			private TextView date = null;
 
 			public ViewHolder(View row) {
 				this.view = row;
 				this.title = (TextView) view.findViewById(R.id.programme_title);
-				this.detail = (TextView) view
-						.findViewById(R.id.programme_detail);
+				this.detail = (TextView) view.findViewById(R.id.programme_detail);
 				this.date = (TextView) view.findViewById(R.id.programme_date);
 			}
 
