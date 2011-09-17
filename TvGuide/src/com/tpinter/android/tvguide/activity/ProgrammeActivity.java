@@ -180,7 +180,7 @@ public class ProgrammeActivity extends ListActivity {
 		public RowData(int channelId, Programme programme) {
 			this.channelID = channelId;
 			this.programmeTitle = programme.getTitle();
-			this.programmeDetail = programme.getSubTitle() == "" ? programme.getCategory() : programme.getSubTitle();
+			this.programmeDetail = programme.getCategory() == "" ? programme.getCategory() : programme.getSubTitle();
 			this.programmeDate = new SimpleDateFormat(Constants.HOUR_MINUTE_DATA_FORMAT).format(programme.getStartDateTime());
 		}
 
@@ -199,7 +199,7 @@ public class ProgrammeActivity extends ListActivity {
 		public final static int TYPE_SECTION_HEADER = 0;
 
 		public CustomAdapter(Context context) {
-			headers = new ArrayAdapter<String>(context, R.layout.programme_header);
+			this.headers = new ArrayAdapter<String>(context, R.layout.programme_header);
 		}
 
 		public void addSection(String section, Adapter adapter) {

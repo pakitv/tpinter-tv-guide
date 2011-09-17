@@ -5,21 +5,24 @@ import java.util.List;
 
 import android.app.ListActivity;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
 import com.tpinter.android.tvguide.adapter.AllChannelListAdapter;
+import com.tpinter.android.tvguide.adapter.AllChannelListCustomAdapter;
 import com.tpinter.android.tvguide.dbmanager.DBAdapter;
 import com.tpinter.android.tvguide.entity.Channel;
 import com.tpinter.android.tvguide.utility.Constants;
@@ -31,13 +34,21 @@ public class AllChannelActivity extends ListActivity {
 
 	private DBAdapter db;
 
+	protected LayoutInflater inflater;
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.all_channel_main);
-		db = new DBAdapter(this);
 
-		loadData();
+		inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+		db = new DBAdapter(this);
+		try {
+			loadData();
+		} catch (Exception e) {
+			Log.e("CustomAdapter.getImageBitmap", "Error getting bitmap", e);
+		}
 	}
 
 	@Override
@@ -152,7 +163,7 @@ public class AllChannelActivity extends ListActivity {
 			List<Channel> group = new ArrayList<Channel>();
 			for (Channel channel : channelList) {
 				if (!channel.getChannelGroupTitle().equals(groupTitle)) {
-					adapter.addSection(groupTitle, new ArrayAdapter<Channel>(AllChannelActivity.this, R.layout.all_channel_list_item, group));
+					adapter.addSection(groupTitle, new AllChannelListCustomAdapter(AllChannelActivity.this, R.layout.all_channel_list_item, group, inflater));
 					group = new ArrayList<Channel>();
 				}
 				group.add(channel);

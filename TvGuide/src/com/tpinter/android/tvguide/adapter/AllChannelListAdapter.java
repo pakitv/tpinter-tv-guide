@@ -21,12 +21,12 @@ public class AllChannelListAdapter extends BaseAdapter {
 	public final static int TYPE_SECTION_HEADER = 0;
 
 	public AllChannelListAdapter(Context context) {
-		headers = new ArrayAdapter<String>(context, R.layout.all_channel_header);
+		this.headers = new ArrayAdapter<String>(context, R.layout.all_channel_header);
 	}
 
-	public void addSection(String section, Adapter adapter) {
-		this.headers.add(section);
-		this.sections.put(section, adapter);
+	public void addSection(String sectionTitle, Adapter adapter) {
+		this.headers.add(sectionTitle);
+		this.sections.put(sectionTitle, adapter);
 	}
 
 	public Object getItem(int position) {
