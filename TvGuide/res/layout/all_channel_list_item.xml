@@ -1,10 +1,19 @@
-<TextView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/list_item_title"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:paddingTop="10dip"
-    android:paddingBottom="10dip"
-    android:paddingLeft="15dip"
-    android:textAppearance="?android:attr/textAppearanceLarge"
-    />
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+android:orientation="vertical"
+android:layout_width="fill_parent"
+android:layout_height="fill_parent"
+>
+<TextView 
+android:id="@+id/list_item_title" 
+android:layout_width="fill_parent"
+android:layout_height="fill_parent" 
+android:paddingTop="10dip"
+android:paddingBottom="10dip" 
+android:paddingLeft="15dip"
+android:textAppearance="?android:attr/textAppearanceLarge" />
+<ImageView
+android:id="@+id/img"
+android:layout_width="40dp"
+android:layout_height="50dp"/>
+</LinearLayout>

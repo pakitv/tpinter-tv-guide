@@ -37,6 +37,13 @@ android:layout_width="fill_parent"
 android:id="@+id/detailFirst"
 android:layout_height="wrap_content"
 android:paddingLeft="10dp"/>
+<ProgressBar 
+android:id="@+id/progressbar"
+android:layout_width="fill_parent" 
+android:layout_height="wrap_content"
+style="?android:attr/progressBarStyleHorizontal" 
+android:max="100"
+android:paddingLeft="10dp" />
 <TextView
 android:layout_width="fill_parent"
 android:id="@+id/detailSecond"
