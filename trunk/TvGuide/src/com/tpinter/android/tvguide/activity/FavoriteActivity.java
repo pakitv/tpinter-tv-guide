@@ -1,5 +1,10 @@
 package com.tpinter.android.tvguide.activity;
 
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.List;
 import java.util.Vector;
 
@@ -8,8 +13,11 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
@@ -21,6 +29,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -54,7 +63,8 @@ public class FavoriteActivity extends ListActivity {
 		db.open();
 		Cursor cursor = db.getAllFavorites();
 		if (cursor.getCount() < 1) {
-			Toast.makeText(this, "Favorite list is empty.", Toast.LENGTH_LONG).show();
+			// Toast.makeText(this, "Favorite list is empty.",
+			// Toast.LENGTH_LONG).show();
 			startActivityForResult(new Intent(this, AllChannelActivity.class), 0);
 		}
 
@@ -83,12 +93,16 @@ public class FavoriteActivity extends ListActivity {
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo) {
 		if (view.getId() == android.R.id.list) {
-			AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
-			Channel selectedChannel = (Channel) this.getListAdapter().getItem(info.position);
-			menu.setHeaderTitle(selectedChannel.getTitle());
-			String[] menuItems = getResources().getStringArray(R.array.favorites_menu);
-			for (int i = 0; i < menuItems.length; i++) {
-				menu.add(Menu.NONE, i, i, menuItems[i]);
+			try {
+				AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
+				Channel selectedChannel = (Channel) this.getListAdapter().getItem(info.position);
+				menu.setHeaderTitle(selectedChannel.getTitle());
+				String[] menuItems = getResources().getStringArray(R.array.favorites_menu);
+				for (int i = 0; i < menuItems.length; i++) {
+					menu.add(Menu.NONE, i, i, menuItems[i]);
+				}
+			} catch (Exception e) {
+				// TODO: handle exception
 			}
 		}
 	}
@@ -190,7 +204,7 @@ public class FavoriteActivity extends ListActivity {
 
 					double percent = (nowTime - currentTime) / (nextTime - currentTime);
 
-					RowData rd = new RowData(channel, programmelList[0], (int) Math.round(percent * 100));
+					RowData rd = new RowData(channel, programmelList, (int) Math.round(percent * 100));
 					data.add(rd);
 				} while (cursor.moveToNext());
 			}
@@ -206,20 +220,20 @@ public class FavoriteActivity extends ListActivity {
 
 		protected String title;
 
-		protected String programmeTitle;
-
 		protected int progressBarStatus;
 
-		public RowData(Channel channel, Programme programme, int progressBarStatus) {
+		protected Programme[] programmes;
+
+		public RowData(Channel channel, Programme[] programmes, int progressBarStatus) {
 			this.channelID = channel.getChannelID();
 			this.title = channel.getTitle();
-			this.programmeTitle = programme.getTitle();
+			this.programmes = programmes;
 			this.progressBarStatus = progressBarStatus;
 		}
 
 		@Override
 		public String toString() {
-			return title + " " + programmeTitle;
+			return title + " " + getProgrammeTitleFirst();
 		}
 
 		public int getChannelID() {
@@ -229,13 +243,39 @@ public class FavoriteActivity extends ListActivity {
 		public String getTitle() {
 			return title;
 		}
+
+		public String getProgrammeTitleFirst() {
+			return programmes[0].getTitle();
+		}
+
+		public String getProgrammeTitleFirstWithDate() {
+			return programmes[0].toString();
+		}
+
+		public String getProgrammeTitleSecond() {
+			return programmes[1].getTitle();
+		}
+
+		public String getProgrammeTitleSecondWithDate() {
+			return programmes[1].toString();
+		}
+
+		public String getProgrammeTitleThird() {
+			return programmes[2].getTitle();
+		}
+
+		public String getProgrammeTitleThirdWithDate() {
+			return programmes[2].toString();
+		}
 	}
 
 	private class CustomAdapter extends ArrayAdapter<RowData> {
 
+		private final int resource;
+
 		public CustomAdapter(Context context, int resource, int textViewResourceId, List<RowData> objects) {
 			super(context, resource, textViewResourceId, objects);
-
+			this.resource = resource;
 		}
 
 		@Override
@@ -245,7 +285,7 @@ public class FavoriteActivity extends ListActivity {
 			RowData rowData = getItem(position);
 
 			if (convertView == null) {
-				convertView = inflater.inflate(R.layout.favorite_list, parent, false);
+				convertView = inflater.inflate(resource, parent, false);
 				holder = new ViewHolder(convertView);
 
 				convertView.setTag(holder);
@@ -253,12 +293,31 @@ public class FavoriteActivity extends ListActivity {
 			holder = (ViewHolder) convertView.getTag();
 
 			holder.getTitle().setText(rowData.title);
-			holder.getDetail().setText(rowData.programmeTitle);
-			holder.getProgressBar().setProgress(rowData.progressBarStatus);
+			holder.getDetailFirst().setText(rowData.getProgrammeTitleFirstWithDate());
+			holder.getDetailSecond().setText(rowData.getProgrammeTitleSecondWithDate());
+			holder.getDetailThird().setText(rowData.getProgrammeTitleThirdWithDate());
+			// holder.getProgressBar().setProgress(rowData.progressBarStatus);
 
-			// holder.getImage().setImageResource(imgid[0]);
+			holder.getImage().setImageBitmap(getImageBitmap("http://tv.animare.hu/i/logo/" + rowData.getChannelID() + ".gif"));
 
 			return convertView;
+		}
+
+		private Bitmap getImageBitmap(String url) {
+			Bitmap bitmap = null;
+			try {
+				URL aURL = new URL(url);
+				URLConnection connection = aURL.openConnection();
+				connection.connect();
+				InputStream inputStream = connection.getInputStream();
+				BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+				bitmap = BitmapFactory.decodeStream(bufferedInputStream);
+				bufferedInputStream.close();
+				inputStream.close();
+			} catch (IOException e) {
+				Log.e("CustomAdapter.getImageBitmap", "Error getting bitmap", e);
+			}
+			return bitmap;
 		}
 
 		private class ViewHolder {
@@ -266,35 +325,50 @@ public class FavoriteActivity extends ListActivity {
 
 			private TextView title = null;
 
-			private TextView detail = null;
+			private TextView detailFirst = null;
 
-			private ProgressBar progressBar = null;
+			private TextView detailSecond = null;
 
-			// private ImageView image = null;
+			private TextView detailThird = null;
+
+			private final ProgressBar progressBar = null;
+
+			private ImageView image = null;
 
 			public ViewHolder(View row) {
 				this.view = row;
 				this.title = (TextView) view.findViewById(R.id.title);
-				this.detail = (TextView) view.findViewById(R.id.detail);
-				this.progressBar = (ProgressBar) view.findViewById(R.id.progressbar);
-				// image = (ImageView) row.findViewById(R.id.img);
+				this.detailFirst = (TextView) view.findViewById(R.id.detailFirst);
+				this.detailSecond = (TextView) view.findViewById(R.id.detailSecond);
+				this.detailThird = (TextView) view.findViewById(R.id.detailThird);
+				// this.progressBar = (ProgressBar)
+				// view.findViewById(R.id.progressbar);
+				this.image = (ImageView) row.findViewById(R.id.img);
 			}
 
 			public TextView getTitle() {
 				return title;
 			}
 
-			public TextView getDetail() {
-				return detail;
+			public TextView getDetailFirst() {
+				return detailFirst;
+			}
+
+			public TextView getDetailSecond() {
+				return detailSecond;
+			}
+
+			public TextView getDetailThird() {
+				return detailThird;
 			}
 
 			public ProgressBar getProgressBar() {
 				return progressBar;
 			}
 
-			// public ImageView getImage() {
-			// return image;
-			// }
+			public ImageView getImage() {
+				return image;
+			}
 		}
 	}
 }
