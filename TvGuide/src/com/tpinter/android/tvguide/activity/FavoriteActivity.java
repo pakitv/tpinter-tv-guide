@@ -60,16 +60,22 @@ public class FavoriteActivity extends ListActivity {
 		inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
 		db = new DBAdapter(this);
-		db.open();
-		Cursor cursor = db.getAllFavorites();
-		if (cursor.getCount() < 1) {
-			// Toast.makeText(this, "Favorite list is empty.",
-			// Toast.LENGTH_LONG).show();
-			startActivityForResult(new Intent(this, AllChannelActivity.class), 0);
+		try {
+			db.open();
+			Cursor cursor = db.getAllFavorites();
+			if (cursor.getCount() < 1) {
+				startActivityForResult(new Intent(this, AllChannelActivity.class), 0);
+			} else {
+				try {
+					loadData();
+				} catch (Exception e) {
+					Log.e(FavoriteActivity.class.getName(), "Error loading data.", e);
+				}
+				getListView().setTextFilterEnabled(true);
+			}
+		} finally {
+			db.close();
 		}
-
-		loadData();
-		getListView().setTextFilterEnabled(true);
 	}
 
 	@Override
@@ -111,7 +117,11 @@ public class FavoriteActivity extends ListActivity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.refresh:
-			loadData();
+			try {
+				loadData();
+			} catch (Exception e) {
+				Log.e(FavoriteActivity.class.getName(), "Error loading data.", e);
+			}
 			break;
 		case R.id.all_channel:
 			startActivityForResult(new Intent(this, AllChannelActivity.class), 0);
@@ -144,7 +154,7 @@ public class FavoriteActivity extends ListActivity {
 
 	private void loadData() {
 		ProgressDialog loadingDialog = new ProgressDialog(this);
-		loadingDialog.setMessage("Loading. Please wait...");
+		loadingDialog.setMessage(getString(R.string.loading_text));
 		new LoadFavoritesTask(loadingDialog).execute();
 	}
 

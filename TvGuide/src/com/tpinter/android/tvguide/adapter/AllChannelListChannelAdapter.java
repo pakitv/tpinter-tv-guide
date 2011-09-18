@@ -12,7 +12,7 @@ import com.tpinter.android.tvguide.activity.R;
 import com.tpinter.android.tvguide.entity.Channel;
 import com.tpinter.android.tvguide.viewholder.AllChannelViewHolder;
 
-public class AllChannelListCustomAdapter extends ArrayAdapter<Channel> {
+public class AllChannelListChannelAdapter extends ArrayAdapter<Channel> {
 
 	private final int resource;
 
@@ -20,7 +20,7 @@ public class AllChannelListCustomAdapter extends ArrayAdapter<Channel> {
 
 	private final Context context;
 
-	public AllChannelListCustomAdapter(Context context, int textViewResourceId, List<Channel> objects, LayoutInflater inflater) {
+	public AllChannelListChannelAdapter(Context context, int textViewResourceId, List<Channel> objects, LayoutInflater inflater) {
 		super(context, textViewResourceId, objects);
 		this.resource = textViewResourceId;
 		this.inflater = inflater;
