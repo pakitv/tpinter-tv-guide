@@ -20,7 +20,6 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.tpinter.android.tvguide.dbmanager.DBAdapter;
-import com.tpinter.android.tvguide.entity.Channel;
 import com.tpinter.android.tvguide.loadtask.LoadFavoritesTask;
 import com.tpinter.android.tvguide.rowdata.FavoriteRowData;
 import com.tpinter.android.tvguide.utility.Constants;
@@ -28,8 +27,6 @@ import com.tpinter.android.tvguide.utility.Constants;
 public class FavoriteActivity extends ListActivity {
 
 	public final static int REMOVE_FROM_FAVORITES_CONTEXTMENU = 0;
-
-	private DBAdapter db;
 
 	private LayoutInflater inflater;
 
@@ -41,23 +38,7 @@ public class FavoriteActivity extends ListActivity {
 
 		inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
-		db = new DBAdapter(this);
-		try {
-			db.open();
-			Cursor cursor = db.getAllFavorites();
-			if (cursor.getCount() < 1) {
-				startActivityForResult(new Intent(this, AllChannelActivity.class), 0);
-			} else {
-				try {
-					loadData();
-				} catch (Exception e) {
-					Log.e(FavoriteActivity.class.getName(), getString(R.string.loading_error_text), e);
-				}
-				getListView().setTextFilterEnabled(true);
-			}
-		} finally {
-			db.close();
-		}
+		loadFavoriteActivity(new DBAdapter(this));
 	}
 
 	@Override
@@ -83,8 +64,8 @@ public class FavoriteActivity extends ListActivity {
 		if (view.getId() == android.R.id.list) {
 			try {
 				AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
-				Channel selectedChannel = (Channel) this.getListAdapter().getItem(info.position);
-				menu.setHeaderTitle(selectedChannel.getTitle());
+				FavoriteRowData selectedRowData = (FavoriteRowData) this.getListAdapter().getItem(info.position);
+				menu.setHeaderTitle(selectedRowData.getTitle());
 				String[] menuItems = getResources().getStringArray(R.array.favorites_menu);
 				for (int i = 0; i < menuItems.length; i++) {
 					menu.add(Menu.NONE, i, i, menuItems[i]);
@@ -118,12 +99,13 @@ public class FavoriteActivity extends ListActivity {
 
 		switch (item.getItemId()) {
 		case REMOVE_FROM_FAVORITES_CONTEXTMENU:
+			DBAdapter db = new DBAdapter(this);
 			db.open();
-			Channel selectedChannel = (Channel) this.getListAdapter().getItem(info.position);
+			FavoriteRowData selectedRowData = (FavoriteRowData) this.getListAdapter().getItem(info.position);
 
-			if (db.deleteFavorite(selectedChannel.getChannelID())) {
+			if (db.deleteFavorite(selectedRowData.getChannelID())) {
 				Toast.makeText(this, getString(R.string.remove_from_favorite_text), Toast.LENGTH_SHORT).show();
-				loadData();
+				loadFavoriteActivity(db);
 			} else {
 				Toast.makeText(this, getString(R.string.remove_from_favorite_error_text), Toast.LENGTH_LONG).show();
 			}
@@ -132,6 +114,27 @@ public class FavoriteActivity extends ListActivity {
 			break;
 		}
 		return true;
+	}
+
+	private void loadFavoriteActivity(DBAdapter db) {
+		boolean dbIsOpen = db.isOpen();
+		if (!dbIsOpen) {
+			db.open();
+		}
+		dbIsOpen = !dbIsOpen;
+		Cursor cursor = db.getAllFavorites();
+		if (cursor.getCount() < 1) {
+			startActivityForResult(new Intent(this, AllChannelActivity.class), 0);
+		} else {
+			try {
+				loadData();
+			} catch (Exception e) {
+				Log.e(FavoriteActivity.class.getName(), getString(R.string.loading_error_text), e);
+			}
+			getListView().setTextFilterEnabled(true);
+		}
+		if (dbIsOpen)
+			db.close();
 	}
 
 	private void loadData() {
