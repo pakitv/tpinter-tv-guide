@@ -1,13 +1,9 @@
 package com.tpinter.android.tvguide.activity;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -21,12 +17,10 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import com.tpinter.android.tvguide.adapter.AllChannelListAdapter;
-import com.tpinter.android.tvguide.adapter.AllChannelListCustomAdapter;
 import com.tpinter.android.tvguide.dbmanager.DBAdapter;
 import com.tpinter.android.tvguide.entity.Channel;
+import com.tpinter.android.tvguide.loadtask.LoadAllChannelTask;
 import com.tpinter.android.tvguide.utility.Constants;
-import com.tpinter.android.tvguide.webservice.TvAnimareWebService;
 
 public class AllChannelActivity extends ListActivity {
 
@@ -34,7 +28,7 @@ public class AllChannelActivity extends ListActivity {
 
 	private DBAdapter db;
 
-	protected LayoutInflater inflater;
+	private LayoutInflater inflater;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -47,7 +41,7 @@ public class AllChannelActivity extends ListActivity {
 		try {
 			loadData();
 		} catch (Exception e) {
-			Log.e("CustomAdapter.getImageBitmap", "Error getting bitmap", e);
+			Log.e(AllChannelActivity.class.getName(), "Error loading data.", e);
 		}
 	}
 
@@ -106,9 +100,9 @@ public class AllChannelActivity extends ListActivity {
 
 			if (db.insertFavorite(selectedChannel.getChannelID(), selectedChannel.getTitle(), selectedChannel.getChannelGroupID(),
 					selectedChannel.getChannelGroupTitle()) > -1) {
-				Toast.makeText(this, selectedChannel.getTitle() + " added to favorites.", Toast.LENGTH_LONG).show();
+				Toast.makeText(this, getString(R.string.add_to_favorite_text, selectedChannel.getTitle()), Toast.LENGTH_LONG).show();
 			} else {
-				Toast.makeText(this, "Failed to add " + selectedChannel.getTitle() + " to favorites!", Toast.LENGTH_LONG).show();
+				Toast.makeText(this, getString(R.string.add_to_favorite_error_text, selectedChannel.getTitle()), Toast.LENGTH_LONG).show();
 			}
 			db.close();
 
@@ -119,62 +113,11 @@ public class AllChannelActivity extends ListActivity {
 
 	private void loadData() {
 		ProgressDialog loadingDialog = new ProgressDialog(this);
-		loadingDialog.setMessage("Loading. Please wait...");
-		new LoadAllChannelTask(loadingDialog).execute();
+		loadingDialog.setMessage(getString(R.string.loading_text));
+		new LoadAllChannelTask(this, loadingDialog).execute();
 	}
 
-	private class LoadAllChannelTask extends AsyncTask<Void, Void, AllChannelListAdapter> {
-
-		ProgressDialog progressDialog;
-
-		public LoadAllChannelTask(ProgressDialog progressDialog) {
-			this.progressDialog = progressDialog;
-		}
-
-		@Override
-		public void onPreExecute() {
-			this.progressDialog.show();
-		}
-
-		@Override
-		protected AllChannelListAdapter doInBackground(Void... params) {
-			return setupListAdapter();
-		}
-
-		@Override
-		public void onPostExecute(AllChannelListAdapter result) {
-			this.progressDialog.dismiss();
-			AllChannelActivity.this.setListAdapter(result);
-
-			ListView list = (ListView) AllChannelActivity.this.findViewById(android.R.id.list);
-			AllChannelActivity.this.registerForContextMenu(list);
-		}
-
-		/**
-		 * This is where we create and connect the adapter to this activity as
-		 * well as the data.
-		 */
-		private AllChannelListAdapter setupListAdapter() {
-			TvAnimareWebService tvAnimareServiceCall = new TvAnimareWebService();
-			Channel[] channelList = tvAnimareServiceCall.GetChannelList();
-			AllChannelListAdapter adapter = new AllChannelListAdapter(AllChannelActivity.this);
-
-			String groupTitle = channelList[0].getChannelGroupTitle();
-			List<Channel> group = new ArrayList<Channel>();
-			for (Channel channel : channelList) {
-				if (!channel.getChannelGroupTitle().equals(groupTitle)) {
-					adapter.addSection(groupTitle, new AllChannelListCustomAdapter(AllChannelActivity.this, R.layout.all_channel_list_item, group, inflater));
-					group = new ArrayList<Channel>();
-				}
-				group.add(channel);
-				groupTitle = channel.getChannelGroupTitle();
-			}
-
-			return adapter;
-
-			// return new ArrayAdapter<Channel>(AllChannelActivity.this,
-			// android.R.layout.simple_list_item_1, channelList);
-
-		}
+	public LayoutInflater getInflater() {
+		return inflater;
 	}
 }
