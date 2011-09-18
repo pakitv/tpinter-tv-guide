@@ -3,6 +3,8 @@
 	<string name="app_name">Tv guide</string>
 	<string name="no_list_data">No List Data Present.</string>
 	<string name="loading_text">Loading. Please wait...</string>
+	<string name="loading_error_text">Error loading data.</string>
+	<string name="channel_logo_url">http://tv.animare.hu/i/logo/%1$d.gif</string>
 	<string-array name="all_channel_menu">
 		<item>Add to favorites</item>
 	</string-array>
@@ -11,4 +13,6 @@
 	</string-array>
 	<string name="add_to_favorite_text">%1$s  added to favorites.</string>
 	<string name="add_to_favorite_error_text">The %1$s is already in favorites.</string>
+	<string name="remove_from_favorite_text">Remove successful!</string>
+	<string name="remove_from_favorite_error_text">Remove failed!</string>
 </resources>

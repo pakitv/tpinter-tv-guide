@@ -41,7 +41,7 @@ public class AllChannelActivity extends ListActivity {
 		try {
 			loadData();
 		} catch (Exception e) {
-			Log.e(AllChannelActivity.class.getName(), "Error loading data.", e);
+			Log.e(AllChannelActivity.class.getName(), getString(R.string.loading_error_text), e);
 		}
 	}
 

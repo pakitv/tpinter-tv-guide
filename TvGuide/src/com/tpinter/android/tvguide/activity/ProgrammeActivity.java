@@ -35,7 +35,7 @@ public class ProgrammeActivity extends ListActivity {
 		try {
 			loadData();
 		} catch (Exception e) {
-			Log.e(ProgrammeActivity.class.getName(), "Error loading data.", e);
+			Log.e(ProgrammeActivity.class.getName(), getString(R.string.loading_error_text), e);
 		}
 	}
 
